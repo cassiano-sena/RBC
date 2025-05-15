@@ -1,151 +1,180 @@
 import pandas as pd
 import tkinter as tk
-from tkinter import ttk
-from tkinter import messagebox
+from tkinter import ttk, messagebox, filedialog
 
-# Carregar dataset
+# Carregar dados
 df = pd.read_excel('carros.xlsx')
-# df = pd.read_csv('carros.csv')
 
-# Função para buscar carros semelhantes
-def buscar_carros():
-    manufacturer_name_val = manufacturer_name.get()
-    model_name_val = model_name.get()
-    transmission_val = transmission.get()
-    color_val = color.get()
-    odometer_value_val = odometer_value.get()
-    year_produced_val = year_produced.get()
-    engine_fuel_val = engine_fuel.get()
-    engine_has_gas_val = engine_has_gas.get()
-    engine_type_val = engine_type.get()
-    engine_capacity_val = engine_capacity.get()
-    body_type_val = body_type.get()
-    has_warranty_val = has_warranty.get()
-    drivetrain_val = drivetrain.get()
-    price_usd_val = price_usd.get()
-    is_exchangeable_val = manufacturer_name.get()
-    
-    resultado = df.copy()
-    if manufacturer_name_val != "Qualquer":
-        resultado = resultado[resultado['manufacturer_name'] == manufacturer_name_val]
-    if model_name_val != "Qualquer":
-        resultado = resultado[resultado['model_name'] == model_name_val]
-    if transmission_val != "Qualquer":
-        resultado = resultado[resultado['transmission'] == transmission_val]
-    if color_val != "Qualquer":
-        resultado = resultado[resultado['color'] == color_val]
-    if odometer_value_val != "Qualquer":
-        resultado = resultado[resultado['odometer_value'] == odometer_value_val]
-    if year_produced_val != "Qualquer":
-        resultado = resultado[resultado['year_produced'] == year_produced_val]
-    if engine_fuel_val != "Qualquer":
-        resultado = resultado[resultado['engine_fuel'] == engine_fuel_val]
-    if engine_has_gas_val != "Qualquer":
-        resultado = resultado[resultado['engine_has_gas'] == engine_has_gas_val]
-    if engine_type_val != "Qualquer":
-        resultado = resultado[resultado['engine_type'] == engine_type_val]
-    if engine_capacity_val != "Qualquer":
-        resultado = resultado[resultado['engine_capacity'] == engine_capacity_val]
-    if body_type_val != "Qualquer":
-        resultado = resultado[resultado['body_type'] == body_type_val]
-    if has_warranty_val != "Qualquer":
-        resultado = resultado[resultado['has_warranty'] == has_warranty_val]
-    if drivetrain_val != "Qualquer":
-        resultado = resultado[resultado['drivetrain'] == drivetrain_val]
-    if price_usd_val != "Qualquer":
-            resultado = resultado[resultado['price_usd'] == price_usd_val]
-    if is_exchangeable_val != "Qualquer":
-        resultado = resultado[resultado['is_exchangeable'] == is_exchangeable_val]
-
-    if resultado.empty:
-        messagebox.showinfo("Resultado", "Nenhum carro encontrado.")
-    else:
-        # Mostrar top 5 resultados
-        top5 = resultado.head(5)
-        output = "\n".join([f"{row['year_produced']} {row['manufacturer_name']} {row['model_name']} - {row['odometer_value']} km" 
-                            for _, row in top5.iterrows()])
-        messagebox.showinfo("Resultados", output)
-
-# Criar janela
+# Criação da janela principal
 root = tk.Tk()
 root.title("Sistema RBC de Carros")
 
-# Campos
-tk.Label(root, text="Marca:").grid(row=0, column=0)
-manufacturer_name = ttk.Combobox(root, values=["Qualquer"] + df['manufacturer_name'].dropna().unique().tolist())
-manufacturer_name.set("Qualquer")
-manufacturer_name.grid(row=0, column=1)
+# Dicionário de modelos por marca
+modelos_por_marca = df.groupby("manufacturer_name")["model_name"].unique().to_dict()
 
 tk.Label(root, text="Modelo:").grid(row=1, column=0)
-model_name = ttk.Combobox(root, values=["Qualquer"] + df['model_name'].dropna().unique().tolist())
+model_name = ttk.Combobox(root, values=["Qualquer"], width=20)
 model_name.set("Qualquer")
-model_name.grid(row=1, column=1)
+model_name.grid(row=1, column=1, columnspan=1)
 
-tk.Label(root, text="Transmissão:").grid(row=2, column=0)
-transmission = ttk.Combobox(root, values=["Qualquer"] + df['transmission'].dropna().unique().tolist())
-transmission.set("Qualquer")
-transmission.grid(row=2, column=1)
+def atualizar_modelos(event=None):
+    marca = manufacturer_name.get()
+    if marca != "Qualquer" and marca in modelos_por_marca:
+        modelos = sorted(modelos_por_marca[marca])
+        model_name['values'] = ["Qualquer"] + modelos
+        model_name.set("Qualquer")
+    else:
+        model_name['values'] = ["Qualquer"]
+        model_name.set("Qualquer")
 
-tk.Label(root, text="Cor:").grid(row=3, column=0)
-color = ttk.Combobox(root, values=["Qualquer"] + df['color'].dropna().unique().tolist())
-color.set("Qualquer")
-color.grid(row=3, column=1)
 
-tk.Label(root, text="Km:").grid(row=4, column=0)
-odometer_value = ttk.Combobox(root, values=["Qualquer"] + df['odometer_value'].dropna().unique().tolist())
-odometer_value.set("Qualquer")
-odometer_value.grid(row=4, column=1)
+# Função para buscar carros com similaridade e filtros por faixa
+def buscar_carros():
+    resultado = df.copy()
 
-tk.Label(root, text="Ano:").grid(row=5, column=0)
-year_produced = ttk.Combobox(root, values=["Qualquer"] + df['year_produced'].dropna().unique().tolist())
-year_produced.set("Qualquer")
-year_produced.grid(row=5, column=1)
+    # Filtros categóricos
+    filtros = {
+        'manufacturer_name': manufacturer_name.get(),
+        'model_name': model_name.get(),
+        'transmission': transmission.get(),
+        'color': color.get(),
+        'engine_fuel': engine_fuel.get(),
+        'engine_has_gas': engine_has_gas.get(),
+        'engine_type': engine_type.get(),
+        'engine_capacity': engine_capacity.get(),
+        'body_type': body_type.get(),
+        'has_warranty': has_warranty.get(),
+        'drivetrain': drivetrain.get(),
+        'is_exchangeable': is_exchangeable.get(),
+    }
 
-tk.Label(root, text="Tipo de combustível:").grid(row=6, column=0)
-engine_fuel = ttk.Combobox(root, values=["Qualquer"] + df['engine_fuel'].dropna().unique().tolist())
-engine_fuel.set("Qualquer")
-engine_fuel.grid(row=6, column=1)
+    for coluna, valor in filtros.items():
+        if valor != "Qualquer":
+            resultado = resultado[resultado[coluna] == valor]
 
-tk.Label(root, text="Possui combustível:").grid(row=7, column=0)
-engine_has_gas = ttk.Combobox(root, values=["Qualquer"] + df['engine_has_gas'].dropna().unique().tolist())
-engine_has_gas.set("Qualquer")
-engine_has_gas.grid(row=7, column=1)
+    # Filtros numéricos
+    try:
+        min_ano = int(year_min.get()) if year_min.get() else resultado['year_produced'].min()
+        max_ano = int(year_max.get()) if year_max.get() else resultado['year_produced'].max()
+        resultado = resultado[(resultado['year_produced'] >= min_ano) & (resultado['year_produced'] <= max_ano)]
 
-tk.Label(root, text="Tipo do Motor:").grid(row=8, column=0)
-engine_type = ttk.Combobox(root, values=["Qualquer"] + df['engine_type'].dropna().unique().tolist())
-engine_type.set("Qualquer")
-engine_type.grid(row=8, column=1)
+        min_km = int(km_min.get()) if km_min.get() else resultado['odometer_value'].min()
+        max_km = int(km_max.get()) if km_max.get() else resultado['odometer_value'].max()
+        resultado = resultado[(resultado['odometer_value'] >= min_km) & (resultado['odometer_value'] <= max_km)]
 
-tk.Label(root, text="Litragem:").grid(row=9, column=0)
-engine_capacity = ttk.Combobox(root, values=["Qualquer"] + df['engine_capacity'].dropna().unique().tolist())
-engine_capacity.set("Qualquer")
-engine_capacity.grid(row=9, column=1)
+        min_preco = float(preco_min.get()) if preco_min.get() else resultado['price_usd'].min()
+        max_preco = float(preco_max.get()) if preco_max.get() else resultado['price_usd'].max()
+        resultado = resultado[(resultado['price_usd'] >= min_preco) & (resultado['price_usd'] <= max_preco)]
+    except ValueError:
+        messagebox.showerror("Erro", "Valores numéricos inválidos.")
+        return
 
-tk.Label(root, text="Carroceria:").grid(row=10, column=0)
-body_type = ttk.Combobox(root, values=["Qualquer"] + df['body_type'].dropna().unique().tolist())
-body_type.set("Qualquer")
-body_type.grid(row=10, column=1)
+    if resultado.empty:
+        messagebox.showinfo("Resultado", "Nenhum carro encontrado.")
+        return
 
-tk.Label(root, text="Segurado:").grid(row=11, column=0)
-has_warranty = ttk.Combobox(root, values=["Qualquer"] + df['has_warranty'].dropna().unique().tolist())
-has_warranty.set("Qualquer")
-has_warranty.grid(row=11, column=1)
+    # Similaridade com pesos
+    peso_km = float(peso_km_entry.get() or 1)
+    peso_ano = float(peso_ano_entry.get() or 1)
+    peso_preco = float(peso_preco_entry.get() or 1)
 
-tk.Label(root, text="Tração:").grid(row=12, column=0)
-drivetrain = ttk.Combobox(root, values=["Qualquer"] + df['drivetrain'].dropna().unique().tolist())
-drivetrain.set("Qualquer")
-drivetrain.grid(row=12, column=1)
+    resultado["similaridade"] = (
+        peso_km * (1 - (resultado['odometer_value'] - min_km) / (max_km - min_km + 1)) +
+        peso_ano * (1 - (resultado['year_produced'] - min_ano) / (max_ano - min_ano + 1)) +
+        peso_preco * (1 - (resultado['price_usd'] - min_preco) / (max_preco - min_preco + 1))
+    )
 
-tk.Label(root, text="Preço:").grid(row=13, column=0)
-price_usd = ttk.Combobox(root, values=["Qualquer"] + df['price_usd'].dropna().unique().tolist())
-price_usd.set("Qualquer")
-price_usd.grid(row=13, column=1)
+    resultado.sort_values(by="similaridade", ascending=False, inplace=True)
 
-tk.Label(root, text="Aceita troca:").grid(row=14, column=0)
-is_exchangeable = ttk.Combobox(root, values=["Qualquer"] + df['is_exchangeable'].dropna().unique().tolist())
-is_exchangeable.set("Qualquer")
-is_exchangeable.grid(row=14, column=1)
+    # Exibir top 5
+    top5 = resultado.head(5)
+    output = "\n".join([f"{row['year_produced']} {row['manufacturer_name']} {row['model_name']} - US${row['price_usd']}" 
+                        for _, row in top5.iterrows()])
+    messagebox.showinfo("Resultados", output)
 
-tk.Button(root, text="Buscar", command=buscar_carros).grid(row=16, column=0, columnspan=2)
+    # Armazena o resultado para exportação
+    buscar_carros.resultado_filtrado = resultado
+
+# Função para salvar em CSV/XLSX
+def salvar_resultado():
+    if hasattr(buscar_carros, 'resultado_filtrado'):
+        file_path = filedialog.asksaveasfilename(defaultextension=".xlsx",
+                                                 filetypes=[("Arquivo Excel", "*.xlsx"), ("CSV", "*.csv")])
+        if file_path:
+            if file_path.endswith('.csv'):
+                buscar_carros.resultado_filtrado.to_csv(file_path, index=False)
+            else:
+                buscar_carros.resultado_filtrado.to_excel(file_path, index=False)
+            messagebox.showinfo("Sucesso", "Arquivo salvo com sucesso.")
+    else:
+        messagebox.showwarning("Aviso", "Nenhum resultado para salvar.")
+
+# --- INTERFACE ---
+
+def add_combo(label_text, row, column, columnspan, values):
+    tk.Label(root, text=label_text).grid(row=row, column=column)
+    cb = ttk.Combobox(root, values=["Qualquer"] + sorted(values), width=20)
+    cb.set("Qualquer")
+    cb.grid(row=row, column=column + 1, columnspan=columnspan)
+    return cb
+
+manufacturer_name = add_combo("Marca:", 0, 0, 1, df['manufacturer_name'].dropna().unique())
+manufacturer_name.bind("<<ComboboxSelected>>", atualizar_modelos)
+
+# model_name = add_combo("Modelo:", 1, 0, 1, df['model_name'].dropna().unique())
+model_name = add_combo("Modelo:", 1, 0, 1, [])
+
+transmission = add_combo("Transmissão:", 2, 0, 1, df['transmission'].dropna().unique())
+color = add_combo("Cor:", 3, 0, 1, df['color'].dropna().unique())
+engine_fuel = add_combo("Combustível:", 4, 0, 1, df['engine_fuel'].dropna().unique())
+engine_has_gas = add_combo("Tem gás:", 5, 0, 1, df['engine_has_gas'].dropna().unique())
+engine_type = add_combo("Tipo do motor:", 6, 0, 1, df['engine_type'].dropna().unique())
+engine_capacity = add_combo("Motor (L):", 7, 0, 1, df['engine_capacity'].dropna().unique())
+body_type = add_combo("Carroceria:", 8, 0, 1, df['body_type'].dropna().unique())
+has_warranty = add_combo("Garantia:", 9, 0, 1, df['has_warranty'].dropna().unique())
+drivetrain = add_combo("Tração:", 10, 0, 1, df['drivetrain'].dropna().unique())
+is_exchangeable = add_combo("Aceita troca:", 11, 0, 1, df['is_exchangeable'].dropna().unique())
+
+# Campos de faixa
+tk.Label(root, text="Ano de:").grid(row=0, column=3)
+year_min = tk.Entry(root, width=8)
+year_min.grid(row=0, column=4)
+tk.Label(root, text="até").grid(row=0, column=5)
+year_max = tk.Entry(root, width=8)
+year_max.grid(row=0, column=6)
+
+tk.Label(root, text="Km de:").grid(row=1, column=3)
+km_min = tk.Entry(root, width=8)
+km_min.grid(row=1, column=4)
+tk.Label(root, text="até").grid(row=1, column=5)
+km_max = tk.Entry(root, width=8)
+km_max.grid(row=1, column=6)
+
+tk.Label(root, text="Preço de:").grid(row=2, column=3)
+preco_min = tk.Entry(root, width=8)
+preco_min.grid(row=2, column=4)
+tk.Label(root, text="até").grid(row=2, column=5)
+preco_max = tk.Entry(root, width=8)
+preco_max.grid(row=2, column=6)
+
+# Pesos
+tk.Label(root, text="Peso Km:").grid(row=4, column=3)
+peso_km_entry = tk.Entry(root, width=6)
+peso_km_entry.insert(0, "1")
+peso_km_entry.grid(row=4, column=4)
+
+tk.Label(root, text="Peso Ano:").grid(row=5, column=3)
+peso_ano_entry = tk.Entry(root, width=6)
+peso_ano_entry.insert(0, "1")
+peso_ano_entry.grid(row=5, column=4)
+
+tk.Label(root, text="Peso Preço:").grid(row=6, column=3)
+peso_preco_entry = tk.Entry(root, width=6)
+peso_preco_entry.insert(0, "1")
+peso_preco_entry.grid(row=6, column=4)
+
+# Botões
+tk.Button(root, text="Buscar", command=buscar_carros).grid(row=13, column=0, columnspan=2, pady=10)
+tk.Button(root, text="Salvar Resultado", command=salvar_resultado).grid(row=13, column=2, columnspan=2, pady=10)
 
 root.mainloop()
