@@ -1,6 +1,7 @@
 import pandas as pd
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
+from rbc import salvar_novo_caso, carregar_casos_salvos, calcular_similaridade_casos
 
 # Carregar dados
 df = pd.read_excel('carros.xlsx')
@@ -26,7 +27,6 @@ def atualizar_modelos(event=None):
     else:
         model_name['values'] = ["Qualquer"]
         model_name.set("Qualquer")
-
 
 # Função para buscar carros com similaridade e filtros por faixa
 def buscar_carros():
@@ -95,8 +95,43 @@ def buscar_carros():
     # Armazena o resultado para exportação
     buscar_carros.resultado_filtrado = resultado
 
-# Função para salvar em CSV/XLSX
-def salvar_resultado():
+    # Salvar novo caso consultado
+    caso_dict = {
+        "manufacturer_name": filtros["manufacturer_name"],
+        "model_name": filtros["model_name"],
+        "transmission": filtros["transmission"],
+        "color": filtros["color"],
+        "engine_fuel": filtros["engine_fuel"],
+        "engine_has_gas": filtros["engine_has_gas"],
+        "engine_type": filtros["engine_type"],
+        "engine_capacity": filtros["engine_capacity"],
+        "body_type": filtros["body_type"],
+        "has_warranty": filtros["has_warranty"],
+        "drivetrain": filtros["drivetrain"],
+        "is_exchangeable": filtros["is_exchangeable"],
+        "year_produced": min_ano,
+        "odometer_value": min_km,
+        "price_usd": min_preco,
+    }
+    salvar_novo_caso(caso_dict)
+
+    # Sugestão com base em casos salvos
+    df_casos = carregar_casos_salvos()
+    if df_casos.empty:
+        print("Nenhum caso salvo ainda.")
+    else:
+        similares = calcular_similaridade_casos(caso_dict, df_casos)
+        if not similares.empty and len(similares) > 1:
+            similares = similares.iloc[1:6]
+            sugestoes = "\n".join([
+                f"{row.get('year_produced', '')} {row.get('manufacturer_name', '')} {row.get('model_name', '')} - US${row.get('price_usd', '')}"
+                for _, row in similares.iterrows()
+            ])
+            messagebox.showinfo("Casos anteriores semelhantes", f"Top 5 casos semelhantes salvos:\n\n{sugestoes}")
+
+
+# Função para exportar o resultado em CSV/XLSX
+def exportar_resultado():
     if hasattr(buscar_carros, 'resultado_filtrado'):
         file_path = filedialog.asksaveasfilename(defaultextension=".xlsx",
                                                  filetypes=[("Arquivo Excel", "*.xlsx"), ("CSV", "*.csv")])
@@ -108,6 +143,22 @@ def salvar_resultado():
             messagebox.showinfo("Sucesso", "Arquivo salvo com sucesso.")
     else:
         messagebox.showwarning("Aviso", "Nenhum resultado para salvar.")
+
+# Função para visualizar casos salvos
+def visualizar_casos_salvos():
+    try:
+        df_casos = carregar_casos_salvos()
+        if df_casos.empty:
+            messagebox.showinfo("Casos Salvos", "Nenhum caso salvo até o momento.")
+        else:
+            texto = "\n".join([
+                f"{row['year_produced']} {row['manufacturer_name']} {row['model_name']} - US${row['price_usd']}"
+                for _, row in df_casos.tail(10).iterrows()
+            ])
+            messagebox.showinfo("Últimos 10 Casos Salvos", texto)
+    except Exception as e:
+        messagebox.showerror("Erro", f"Erro ao carregar casos salvos:\n{str(e)}")
+
 
 # --- INTERFACE ---
 
@@ -138,23 +189,29 @@ is_exchangeable = add_combo("Aceita troca:", 11, 0, 1, df['is_exchangeable'].dro
 # Campos de faixa
 tk.Label(root, text="Ano de:").grid(row=0, column=3)
 year_min = tk.Entry(root, width=8)
+year_min.insert(0, "2010")
 year_min.grid(row=0, column=4)
 tk.Label(root, text="até").grid(row=0, column=5)
 year_max = tk.Entry(root, width=8)
+year_max.insert(0, "2020")
 year_max.grid(row=0, column=6)
 
 tk.Label(root, text="Km de:").grid(row=1, column=3)
 km_min = tk.Entry(root, width=8)
+km_min.insert(0, "1000")
 km_min.grid(row=1, column=4)
 tk.Label(root, text="até").grid(row=1, column=5)
 km_max = tk.Entry(root, width=8)
+km_max.insert(0, "100000")
 km_max.grid(row=1, column=6)
 
 tk.Label(root, text="Preço de:").grid(row=2, column=3)
 preco_min = tk.Entry(root, width=8)
+preco_min.insert(0, "10000")
 preco_min.grid(row=2, column=4)
 tk.Label(root, text="até").grid(row=2, column=5)
 preco_max = tk.Entry(root, width=8)
+preco_max.insert(0, "60000")
 preco_max.grid(row=2, column=6)
 
 # Pesos
@@ -175,6 +232,8 @@ peso_preco_entry.grid(row=6, column=4)
 
 # Botões
 tk.Button(root, text="Buscar", command=buscar_carros).grid(row=13, column=0, columnspan=2, pady=10)
-tk.Button(root, text="Salvar Resultado", command=salvar_resultado).grid(row=13, column=2, columnspan=2, pady=10)
+tk.Button(root, text="Salvar Novo Caso", command=salvar_novo_caso).grid(row=13, column=2, columnspan=6, pady=10)
+tk.Button(root, text="Ver Casos Salvos", command=visualizar_casos_salvos).grid(row=14, column=0, columnspan=2, pady=10)
+tk.Button(root, text="Exportar Resultado", command=exportar_resultado).grid(row=14, column=2, columnspan=6, pady=10)
 
 root.mainloop()
