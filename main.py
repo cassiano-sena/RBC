@@ -1,7 +1,7 @@
 import pandas as pd
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
-from rbc import salvar_novo_caso, carregar_casos_salvos, calcular_similaridade_casos
+from rbc import salvar_novo_caso, carregar_casos_salvos, calcular_similaridade, calcular_similaridade_casos
 
 # Carregar dados
 df = pd.read_excel('carros.xlsx')
@@ -28,7 +28,6 @@ def atualizar_modelos(event=None):
         model_name['values'] = ["Qualquer"]
         model_name.set("Qualquer")
 
-# Função para buscar carros com similaridade e filtros por faixa
 def buscar_carros():
     resultado = df.copy()
 
@@ -73,32 +72,42 @@ def buscar_carros():
         messagebox.showinfo("Resultado", "Nenhum carro encontrado.")
         return
 
-    # Pesos
-    peso_marca = float(peso_marca_entry.get() or 1)
-    peso_modelo = float(peso_modelo_entry.get() or 1)
-    peso_cambio = float(peso_cambio_entry.get() or 1)
-    # peso_cor = float(peso_cor_entry.get() or 1)
-    peso_km = float(peso_km_entry.get() or 1)
-    peso_ano = float(peso_ano_entry.get() or 1)
-    peso_combustivel = float(peso_combustivel_entry.get() or 1)
-    # peso_possui_gas = float(peso_possui_gas_entry.get() or 1)
-    # peso_tipo_motor = float(peso_tipo_motor_entry.get() or 1)
-    peso_litragem_motor = float(peso_litragem_motor_entry.get() or 1)
-    peso_carroceria = float(peso_carroceria_entry.get() or 1)
-    peso_seguro = float(peso_seguro_entry.get() or 1)
-    peso_preco = float(peso_preco_entry.get() or 1)
-    peso_troca = float(peso_troca_entry.get() or 1)
+    # Lê os pesos das entradas (troque nomes das entradas conforme seu código)
+    pesos = {
+        'price_usd': float(peso_preco_entry.get() or 0),
+        'odometer_value': float(peso_km_entry.get() or 0),
+        'year_produced': float(peso_ano_entry.get() or 0),
+        'manufacturer_name': float(peso_marca_entry.get() or 0),
+        'model_name': float(peso_modelo_entry.get() or 0),
+        'transmission': float(peso_cambio_entry.get() or 0),
+        'engine_fuel': float(peso_combustivel_entry.get() or 0),
+        'engine_capacity': float(peso_litragem_motor_entry.get() or 0),
+        'body_type': float(peso_carroceria_entry.get() or 0),
+        'has_warranty': float(peso_seguro_entry.get() or 0),
+        'drivetrain': float(peso_tracao_entry.get() or 0),
+        'is_exchangeable': float(peso_troca_entry.get() or 0),
+    }
 
-    # Similaridade com os resultados
-    resultado["similaridade"] = (
-        peso_km * (1 - (resultado['odometer_value'] - min_km) / (max_km - min_km + 1)) +
-        peso_ano * (1 - (resultado['year_produced'] - min_ano) / (max_ano - min_ano + 1)) +
-        peso_preco * (1 - (resultado['price_usd'] - min_preco) / (max_preco - min_preco + 1))
-    )
+    # Caso de consulta para similaridade (preencher com os filtros numéricos e categóricos escolhidos)
+    caso_dict = {
+        "manufacturer_name": filtros["manufacturer_name"],
+        "model_name": filtros["model_name"],
+        "transmission": filtros["transmission"],
+        "engine_fuel": filtros["engine_fuel"],
+        "engine_capacity": filtros["engine_capacity"],
+        "body_type": filtros["body_type"],
+        "has_warranty": filtros["has_warranty"],
+        "drivetrain": filtros["drivetrain"],
+        "is_exchangeable": filtros["is_exchangeable"],
+        "year_produced": min_ano,
+        "odometer_value": min_km,
+        "price_usd": min_preco,
+    }
 
-    resultado.sort_values(by="similaridade", ascending=False, inplace=True)
+    # Importante: calcular similaridade antes de mostrar resultados
+    resultado = calcular_similaridade(caso_dict, resultado, pesos)
 
-    # Exibir top 5
+    # Exibir top 5 ordenado pela similaridade
     top5 = resultado.head(5)
     output = "\n".join([
         f"{row['year_produced']} {row['manufacturer_name']} {row['model_name']} - US${row['price_usd']:.2f} "
@@ -111,30 +120,11 @@ def buscar_carros():
     buscar_carros.resultado_filtrado = resultado
 
     # Salvar novo caso consultado
-    caso_dict = {
-        "manufacturer_name": filtros["manufacturer_name"],
-        "model_name": filtros["model_name"],
-        "transmission": filtros["transmission"],
-        "color": filtros["color"],
-        "engine_fuel": filtros["engine_fuel"],
-        "engine_has_gas": filtros["engine_has_gas"],
-        "engine_type": filtros["engine_type"],
-        "engine_capacity": filtros["engine_capacity"],
-        "body_type": filtros["body_type"],
-        "has_warranty": filtros["has_warranty"],
-        "drivetrain": filtros["drivetrain"],
-        "is_exchangeable": filtros["is_exchangeable"],
-        "year_produced": min_ano,
-        "odometer_value": min_km,
-        "price_usd": min_preco,
-    }
     salvar_novo_caso(caso_dict)
 
-    # Sugestão com base em casos salvos
+    # Sugestão com base em casos salvos (se quiser manter essa parte)
     df_casos = carregar_casos_salvos()
-    if df_casos.empty:
-        print("Nenhum caso salvo ainda.")
-    else:
+    if not df_casos.empty:
         similares = calcular_similaridade_casos(caso_dict, df_casos)
         if not similares.empty and len(similares) > 1:
             similares = similares.iloc[1:6]
@@ -143,7 +133,6 @@ def buscar_carros():
                 for _, row in similares.iterrows()
             ])
             messagebox.showinfo("Casos anteriores semelhantes", f"Top 5 casos semelhantes salvos:\n\n{sugestoes}")
-
 
 # Função para exportar o resultado em CSV/XLSX
 def exportar_resultado():
@@ -158,6 +147,7 @@ def exportar_resultado():
             messagebox.showinfo("Sucesso", "Arquivo salvo com sucesso.")
     else:
         messagebox.showwarning("Aviso", "Nenhum resultado para salvar.")
+
 
 # Função para visualizar casos salvos
 def visualizar_casos_salvos():
@@ -187,7 +177,6 @@ def add_combo(label_text, row, column, columnspan, values):
 manufacturer_name = add_combo("Marca:", 0, 0, 1, df['manufacturer_name'].dropna().unique())
 manufacturer_name.bind("<<ComboboxSelected>>", atualizar_modelos)
 
-# model_name = add_combo("Modelo:", 1, 0, 1, df['model_name'].dropna().unique())
 model_name = add_combo("Modelo:", 1, 0, 1, [])
 
 transmission = add_combo("Transmissão:", 2, 0, 1, df['transmission'].dropna().unique())
@@ -294,7 +283,6 @@ peso_troca_entry.insert(0, "0.01")
 
 # Botões
 tk.Button(root, text="Buscar", command=buscar_carros).grid(row=13, column=0, columnspan=2, pady=10)
-tk.Button(root, text="Salvar Novo Caso", command=salvar_novo_caso).grid(row=13, column=2, columnspan=6, pady=10)
 tk.Button(root, text="Ver Casos Salvos", command=visualizar_casos_salvos).grid(row=14, column=0, columnspan=2, pady=10)
 tk.Button(root, text="Exportar Resultado", command=exportar_resultado).grid(row=14, column=2, columnspan=6, pady=10)
 
