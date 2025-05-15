@@ -1,7 +1,7 @@
 import pandas as pd
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
-from rbc import salvar_novo_caso, carregar_casos_salvos, calcular_similaridade, calcular_similaridade_casos
+from rbc import salvar_novo_caso, carregar_casos_salvos, calcular_similaridade, calcular_similaridade_casos, ATRIBUTOS_CATEGORICOS, ATRIBUTOS_NUMERICOS
 
 # Carregar dados
 df = pd.read_excel('carros.xlsx')
