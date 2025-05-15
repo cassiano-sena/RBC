@@ -73,11 +73,23 @@ def buscar_carros():
         messagebox.showinfo("Resultado", "Nenhum carro encontrado.")
         return
 
-    # Similaridade com pesos
+    # Pesos
+    peso_marca = float(peso_marca_entry.get() or 1)
+    peso_modelo = float(peso_modelo_entry.get() or 1)
+    peso_cambio = float(peso_cambio_entry.get() or 1)
+    # peso_cor = float(peso_cor_entry.get() or 1)
     peso_km = float(peso_km_entry.get() or 1)
     peso_ano = float(peso_ano_entry.get() or 1)
+    peso_combustivel = float(peso_combustivel_entry.get() or 1)
+    # peso_possui_gas = float(peso_possui_gas_entry.get() or 1)
+    # peso_tipo_motor = float(peso_tipo_motor_entry.get() or 1)
+    peso_litragem_motor = float(peso_litragem_motor_entry.get() or 1)
+    peso_carroceria = float(peso_carroceria_entry.get() or 1)
+    peso_seguro = float(peso_seguro_entry.get() or 1)
     peso_preco = float(peso_preco_entry.get() or 1)
+    peso_troca = float(peso_troca_entry.get() or 1)
 
+    # Similaridade com os resultados
     resultado["similaridade"] = (
         peso_km * (1 - (resultado['odometer_value'] - min_km) / (max_km - min_km + 1)) +
         peso_ano * (1 - (resultado['year_produced'] - min_ano) / (max_ano - min_ano + 1)) +
@@ -88,8 +100,11 @@ def buscar_carros():
 
     # Exibir top 5
     top5 = resultado.head(5)
-    output = "\n".join([f"{row['year_produced']} {row['manufacturer_name']} {row['model_name']} - US${row['price_usd']}" 
-                        for _, row in top5.iterrows()])
+    output = "\n".join([
+        f"{row['year_produced']} {row['manufacturer_name']} {row['model_name']} - US${row['price_usd']:.2f} "
+        f"(Similaridade: {row['similaridade']:.2f})"
+        for _, row in top5.iterrows()
+    ])
     messagebox.showinfo("Resultados", output)
 
     # Armazena o resultado para exportação
@@ -187,48 +202,95 @@ drivetrain = add_combo("Tração:", 10, 0, 1, df['drivetrain'].dropna().unique()
 is_exchangeable = add_combo("Aceita troca:", 11, 0, 1, df['is_exchangeable'].dropna().unique())
 
 # Campos de faixa
-tk.Label(root, text="Ano de:").grid(row=0, column=3)
+tk.Label(root, text="Ano de:").grid(row=0, column=10)
 year_min = tk.Entry(root, width=8)
-year_min.insert(0, "2010")
-year_min.grid(row=0, column=4)
-tk.Label(root, text="até").grid(row=0, column=5)
+year_min.grid(row=0, column=11)
+tk.Label(root, text="até").grid(row=0, column=12)
 year_max = tk.Entry(root, width=8)
-year_max.insert(0, "2020")
-year_max.grid(row=0, column=6)
+year_max.grid(row=0, column=13)
 
-tk.Label(root, text="Km de:").grid(row=1, column=3)
+tk.Label(root, text="Km de:").grid(row=1, column=10)
 km_min = tk.Entry(root, width=8)
-km_min.insert(0, "1000")
-km_min.grid(row=1, column=4)
-tk.Label(root, text="até").grid(row=1, column=5)
+km_min.grid(row=1, column=11)
+tk.Label(root, text="até").grid(row=1, column=12)
 km_max = tk.Entry(root, width=8)
-km_max.insert(0, "100000")
-km_max.grid(row=1, column=6)
+km_max.grid(row=1, column=13)
 
-tk.Label(root, text="Preço de:").grid(row=2, column=3)
+tk.Label(root, text="Preço de:").grid(row=2, column=10)
 preco_min = tk.Entry(root, width=8)
-preco_min.insert(0, "10000")
-preco_min.grid(row=2, column=4)
-tk.Label(root, text="até").grid(row=2, column=5)
+preco_min.grid(row=2, column=11)
+tk.Label(root, text="até").grid(row=2, column=12)
 preco_max = tk.Entry(root, width=8)
+preco_max.grid(row=2, column=13)
+
+year_min.insert(0, "2010")
+year_max.insert(0, "2020")
+km_min.insert(0, "1000")
+km_max.insert(0, "100000")
+preco_min.insert(0, "10000")
 preco_max.insert(0, "60000")
-preco_max.grid(row=2, column=6)
 
 # Pesos
-tk.Label(root, text="Peso Km:").grid(row=4, column=3)
+tk.Label(root, text="Peso Marca:").grid(row=0, column=3)
+peso_marca_entry = tk.Entry(root, width=6)
+peso_marca_entry.grid(row=0, column=4)
+
+tk.Label(root, text="Peso Modelo:").grid(row=1, column=3)
+peso_modelo_entry = tk.Entry(root, width=6)
+peso_modelo_entry.grid(row=1, column=4)
+
+tk.Label(root, text="Peso Transmissão:").grid(row=2, column=3)
+peso_cambio_entry = tk.Entry(root, width=6)
+peso_cambio_entry.grid(row=2, column=4)
+
+tk.Label(root, text="Peso Km:").grid(row=3, column=3)
 peso_km_entry = tk.Entry(root, width=6)
-peso_km_entry.insert(0, "1")
-peso_km_entry.grid(row=4, column=4)
+peso_km_entry.grid(row=3, column=4)
 
-tk.Label(root, text="Peso Ano:").grid(row=5, column=3)
+tk.Label(root, text="Peso Ano:").grid(row=4, column=3)
 peso_ano_entry = tk.Entry(root, width=6)
-peso_ano_entry.insert(0, "1")
-peso_ano_entry.grid(row=5, column=4)
+peso_ano_entry.grid(row=4, column=4)
 
-tk.Label(root, text="Peso Preço:").grid(row=6, column=3)
+tk.Label(root, text="Peso Combustível:").grid(row=5, column=3)
+peso_combustivel_entry = tk.Entry(root, width=6)
+peso_combustivel_entry.grid(row=5, column=4)
+
+tk.Label(root, text="Peso Motor:").grid(row=6, column=3)
+peso_litragem_motor_entry = tk.Entry(root, width=6)
+peso_litragem_motor_entry.grid(row=6, column=4)
+
+tk.Label(root, text="Peso Carroceria:").grid(row=7, column=3)
+peso_carroceria_entry = tk.Entry(root, width=6)
+peso_carroceria_entry.grid(row=7, column=4)
+
+tk.Label(root, text="Peso Garantia:").grid(row=8, column=3)
+peso_seguro_entry = tk.Entry(root, width=6)
+peso_seguro_entry.grid(row=8, column=4)
+
+tk.Label(root, text="Peso Tração:").grid(row=9, column=3)
+peso_tracao_entry = tk.Entry(root, width=6)
+peso_tracao_entry.grid(row=9, column=4)
+
+tk.Label(root, text="Peso Preço:").grid(row=10, column=3)
 peso_preco_entry = tk.Entry(root, width=6)
-peso_preco_entry.insert(0, "1")
-peso_preco_entry.grid(row=6, column=4)
+peso_preco_entry.grid(row=10, column=4)
+
+tk.Label(root, text="Peso Troca:").grid(row=11, column=3)
+peso_troca_entry = tk.Entry(root, width=6)
+peso_troca_entry.grid(row=11, column=4)
+
+peso_preco_entry.insert(0, "0.4")
+peso_km_entry.insert(0, "0.3")
+peso_ano_entry.insert(0, "0.2")
+peso_marca_entry.insert(0, "0.02")
+peso_modelo_entry.insert(0, "0.02")
+peso_cambio_entry.insert(0, "0.01")
+peso_combustivel_entry.insert(0, "0.01")
+peso_litragem_motor_entry.insert(0, "0.01")
+peso_carroceria_entry.insert(0, "0.01")
+peso_seguro_entry.insert(0, "0.01")
+peso_tracao_entry.insert(0, "0.01")
+peso_troca_entry.insert(0, "0.01")
 
 # Botões
 tk.Button(root, text="Buscar", command=buscar_carros).grid(row=13, column=0, columnspan=2, pady=10)
