@@ -28,11 +28,19 @@ def salvar_novo_caso(caso_dict):
 
 
 def calcular_similaridade(caso_consulta, df, pesos):
-    def normalizar(val1, val2):
+    # Calcular min/max por atributo numérico
+    min_max = {
+        attr: (df[attr].min(), df[attr].max())
+        for attr in ATRIBUTOS_NUMERICOS if attr in df
+    }
+
+    def normalizar(val1, val2, min_val, max_val):
         try:
             val1 = float(val1)
             val2 = float(val2)
-            return 1 - abs(val1 - val2) / (abs(val2) + 1)
+            if max_val == min_val:
+                return 1.0
+            return 1 - abs(val1 - val2) / (max_val - min_val)
         except (ValueError, TypeError):
             return 0
 
@@ -40,6 +48,7 @@ def calcular_similaridade(caso_consulta, df, pesos):
 
     for _, row in df.iterrows():
         sim = 0
+        total_peso = 0
 
         for atributo, peso in pesos.items():
             if peso == 0 or atributo not in caso_consulta:
@@ -48,17 +57,19 @@ def calcular_similaridade(caso_consulta, df, pesos):
             valor_caso = caso_consulta[atributo]
             valor_row = row.get(atributo)
 
-            if atributo in ATRIBUTOS_NUMERICOS:
-                sim += peso * normalizar(valor_row, valor_caso)
+            if atributo in ATRIBUTOS_NUMERICOS and atributo in min_max:
+                min_val, max_val = min_max[atributo]
+                sim += peso * normalizar(valor_row, valor_caso, min_val, max_val)
+                total_peso += peso
             elif atributo in ATRIBUTOS_CATEGORICOS:
                 sim += peso * (1 if str(valor_row).strip().lower() == str(valor_caso).strip().lower() else 0)
+                total_peso += peso
 
-        similaridades.append(sim)
+        similaridades.append(sim / total_peso if total_peso > 0 else 0)
 
     df = df.copy()
     df["similaridade"] = similaridades
     return df.sort_values(by="similaridade", ascending=False)
-
 
 
 

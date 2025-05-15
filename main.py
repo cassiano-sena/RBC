@@ -283,7 +283,6 @@ peso_troca_entry.insert(0, "0.01")
 
 # Botões
 tk.Button(root, text="Buscar", command=buscar_carros).grid(row=13, column=0, columnspan=2, pady=10)
-tk.Button(root, text="Ver Casos Salvos", command=visualizar_casos_salvos).grid(row=14, column=0, columnspan=2, pady=10)
-tk.Button(root, text="Exportar Resultado", command=exportar_resultado).grid(row=14, column=2, columnspan=6, pady=10)
+tk.Button(root, text="Exportar Resultado", command=exportar_resultado).grid(row=13, column=2, columnspan=6, pady=10)
 
 root.mainloop()
