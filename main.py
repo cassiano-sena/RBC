@@ -172,8 +172,8 @@ model_name = add_combo("Modelo:", 1, 0, 1, [])
 transmission = add_combo("Transmissão:", 2, 0, 1, df['transmission'].dropna().unique())
 color = add_combo("Cor:", 3, 0, 1, df['color'].dropna().unique())
 engine_fuel = add_combo("Combustível:", 4, 0, 1, df['engine_fuel'].dropna().unique())
-body_type = add_combo("Carroceria:", 6, 0, 1, df['body_type'].dropna().unique())
-drivetrain = add_combo("Tração:", 7, 0, 1, df['drivetrain'].dropna().unique())
+body_type = add_combo("Carroceria:", 5, 0, 1, df['body_type'].dropna().unique())
+drivetrain = add_combo("Tração:", 6, 0, 1, df['drivetrain'].dropna().unique())
 
 # Campos de faixa
 tk.Label(root, text="Ano de:").grid(row=0, column=10)
@@ -218,8 +218,6 @@ tk.Label(root, text="Peso Preço:").grid(row=5, column=10)
 peso_preco_entry = tk.Entry(root, width=6)
 peso_preco_entry.grid(row=5, column=11)
 
-
-
 tk.Label(root, text="Peso Marca:").grid(row=0, column=3)
 peso_marca_entry = tk.Entry(root, width=6)
 peso_marca_entry.grid(row=0, column=4)
@@ -240,17 +238,13 @@ tk.Label(root, text="Peso Combustível:").grid(row=4, column=3)
 peso_combustivel_entry = tk.Entry(root, width=6)
 peso_combustivel_entry.grid(row=4, column=4)
 
-tk.Label(root, text="Peso Motor:").grid(row=5, column=3)
-peso_litragem_motor_entry = tk.Entry(root, width=6)
-peso_litragem_motor_entry.grid(row=5, column=4)
-
-tk.Label(root, text="Peso Carroceria:").grid(row=6, column=3)
+tk.Label(root, text="Peso Carroceria:").grid(row=5, column=3)
 peso_carroceria_entry = tk.Entry(root, width=6)
-peso_carroceria_entry.grid(row=6, column=4)
+peso_carroceria_entry.grid(row=5, column=4)
 
-tk.Label(root, text="Peso Tração:").grid(row=7, column=3)
+tk.Label(root, text="Peso Tração:").grid(row=6, column=3)
 peso_tracao_entry = tk.Entry(root, width=6)
-peso_tracao_entry.grid(row=7, column=4)
+peso_tracao_entry.grid(row=6, column=4)
 
 peso_preco_entry.insert(0, "0.4")
 peso_km_entry.insert(0, "0.3")
@@ -260,7 +254,6 @@ peso_modelo_entry.insert(0, "0.02")
 peso_cambio_entry.insert(0, "0.01")
 peso_cor_entry.insert(0, "0.01")
 peso_combustivel_entry.insert(0, "0.01")
-peso_litragem_motor_entry.insert(0, "0.01")
 peso_carroceria_entry.insert(0, "0.01")
 peso_tracao_entry.insert(0, "0.01")
 
