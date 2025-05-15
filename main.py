@@ -38,13 +38,13 @@ def buscar_carros():
         'transmission': transmission.get(),
         'color': color.get(),
         'engine_fuel': engine_fuel.get(),
-        'engine_has_gas': engine_has_gas.get(),
-        'engine_type': engine_type.get(),
         'engine_capacity': engine_capacity.get(),
         'body_type': body_type.get(),
-        'has_warranty': has_warranty.get(),
         'drivetrain': drivetrain.get(),
-        'is_exchangeable': is_exchangeable.get(),
+        # 'engine_has_gas': engine_has_gas.get(),
+        # 'engine_type': engine_type.get(),
+        # 'has_warranty': has_warranty.get(),
+        # 'is_exchangeable': is_exchangeable.get(),
     }
 
     for coluna, valor in filtros.items():
@@ -80,12 +80,13 @@ def buscar_carros():
         'manufacturer_name': float(peso_marca_entry.get() or 0),
         'model_name': float(peso_modelo_entry.get() or 0),
         'transmission': float(peso_cambio_entry.get() or 0),
+        'color': float(peso_cor_entry.get() or 0),
         'engine_fuel': float(peso_combustivel_entry.get() or 0),
         'engine_capacity': float(peso_litragem_motor_entry.get() or 0),
         'body_type': float(peso_carroceria_entry.get() or 0),
-        'has_warranty': float(peso_seguro_entry.get() or 0),
         'drivetrain': float(peso_tracao_entry.get() or 0),
-        'is_exchangeable': float(peso_troca_entry.get() or 0),
+        # 'has_warranty': float(peso_seguro_entry.get() or 0),
+        # 'is_exchangeable': float(peso_troca_entry.get() or 0),
     }
 
     # Caso de consulta para similaridade (preencher com os filtros numéricos e categóricos escolhidos)
@@ -93,12 +94,13 @@ def buscar_carros():
         "manufacturer_name": filtros["manufacturer_name"],
         "model_name": filtros["model_name"],
         "transmission": filtros["transmission"],
+        "color": filtros["color"],
         "engine_fuel": filtros["engine_fuel"],
         "engine_capacity": filtros["engine_capacity"],
         "body_type": filtros["body_type"],
-        "has_warranty": filtros["has_warranty"],
+        # "has_warranty": filtros["has_warranty"],
         "drivetrain": filtros["drivetrain"],
-        "is_exchangeable": filtros["is_exchangeable"],
+        # "is_exchangeable": filtros["is_exchangeable"],
         "year_produced": min_ano,
         "odometer_value": min_km,
         "price_usd": min_preco,
@@ -110,7 +112,7 @@ def buscar_carros():
     # Exibir top 5 ordenado pela similaridade
     top5 = resultado.head(5)
     output = "\n".join([
-        f"{row['year_produced']} {row['manufacturer_name']} {row['model_name']} - US${row['price_usd']:.2f} "
+        f"{row['year_produced']} {row['manufacturer_name']} {row['model_name']} ({row['odometer_value']}km) - US${row['price_usd']:.2f} "
         f"(Similaridade: {row['similaridade']:.2f})"
         for _, row in top5.iterrows()
     ])
@@ -178,17 +180,16 @@ manufacturer_name = add_combo("Marca:", 0, 0, 1, df['manufacturer_name'].dropna(
 manufacturer_name.bind("<<ComboboxSelected>>", atualizar_modelos)
 
 model_name = add_combo("Modelo:", 1, 0, 1, [])
-
 transmission = add_combo("Transmissão:", 2, 0, 1, df['transmission'].dropna().unique())
 color = add_combo("Cor:", 3, 0, 1, df['color'].dropna().unique())
 engine_fuel = add_combo("Combustível:", 4, 0, 1, df['engine_fuel'].dropna().unique())
-engine_has_gas = add_combo("Tem gás:", 5, 0, 1, df['engine_has_gas'].dropna().unique())
-engine_type = add_combo("Tipo do motor:", 6, 0, 1, df['engine_type'].dropna().unique())
-engine_capacity = add_combo("Motor (L):", 7, 0, 1, df['engine_capacity'].dropna().unique())
-body_type = add_combo("Carroceria:", 8, 0, 1, df['body_type'].dropna().unique())
-has_warranty = add_combo("Garantia:", 9, 0, 1, df['has_warranty'].dropna().unique())
-drivetrain = add_combo("Tração:", 10, 0, 1, df['drivetrain'].dropna().unique())
-is_exchangeable = add_combo("Aceita troca:", 11, 0, 1, df['is_exchangeable'].dropna().unique())
+engine_capacity = add_combo("Motor (L):", 5, 0, 1, df['engine_capacity'].dropna().unique())
+body_type = add_combo("Carroceria:", 6, 0, 1, df['body_type'].dropna().unique())
+drivetrain = add_combo("Tração:", 7, 0, 1, df['drivetrain'].dropna().unique())
+# engine_type = add_combo("Tipo do motor:", 5, 0, 1, df['engine_type'].dropna().unique())
+# engine_has_gas = add_combo("Tem gás:", 5, 0, 1, df['engine_has_gas'].dropna().unique())
+# has_warranty = add_combo("Garantia:", 9, 0, 1, df['has_warranty'].dropna().unique())
+# is_exchangeable = add_combo("Aceita troca:", 11, 0, 1, df['is_exchangeable'].dropna().unique())
 
 # Campos de faixa
 tk.Label(root, text="Ano de:").grid(row=0, column=10)
@@ -212,6 +213,9 @@ tk.Label(root, text="até").grid(row=2, column=12)
 preco_max = tk.Entry(root, width=8)
 preco_max.grid(row=2, column=13)
 
+# tk.Label(root, text="*Intervalos interferem no resultado*").grid(row=4, column=10)
+
+
 year_min.insert(0, "2010")
 year_max.insert(0, "2020")
 km_min.insert(0, "1000")
@@ -220,6 +224,20 @@ preco_min.insert(0, "10000")
 preco_max.insert(0, "60000")
 
 # Pesos
+tk.Label(root, text="Peso Ano:").grid(row=3, column=10)
+peso_ano_entry = tk.Entry(root, width=6)
+peso_ano_entry.grid(row=3, column=11)
+
+tk.Label(root, text="Peso Km:").grid(row=4, column=10)
+peso_km_entry = tk.Entry(root, width=6)
+peso_km_entry.grid(row=4, column=11)
+
+tk.Label(root, text="Peso Preço:").grid(row=5, column=10)
+peso_preco_entry = tk.Entry(root, width=6)
+peso_preco_entry.grid(row=5, column=11)
+
+
+
 tk.Label(root, text="Peso Marca:").grid(row=0, column=3)
 peso_marca_entry = tk.Entry(root, width=6)
 peso_marca_entry.grid(row=0, column=4)
@@ -232,41 +250,33 @@ tk.Label(root, text="Peso Transmissão:").grid(row=2, column=3)
 peso_cambio_entry = tk.Entry(root, width=6)
 peso_cambio_entry.grid(row=2, column=4)
 
-tk.Label(root, text="Peso Km:").grid(row=3, column=3)
-peso_km_entry = tk.Entry(root, width=6)
-peso_km_entry.grid(row=3, column=4)
+tk.Label(root, text="Peso Cor:").grid(row=3, column=3)
+peso_cor_entry = tk.Entry(root, width=6)
+peso_cor_entry.grid(row=3, column=4)
 
-tk.Label(root, text="Peso Ano:").grid(row=4, column=3)
-peso_ano_entry = tk.Entry(root, width=6)
-peso_ano_entry.grid(row=4, column=4)
-
-tk.Label(root, text="Peso Combustível:").grid(row=5, column=3)
+tk.Label(root, text="Peso Combustível:").grid(row=4, column=3)
 peso_combustivel_entry = tk.Entry(root, width=6)
-peso_combustivel_entry.grid(row=5, column=4)
+peso_combustivel_entry.grid(row=4, column=4)
 
-tk.Label(root, text="Peso Motor:").grid(row=6, column=3)
+tk.Label(root, text="Peso Motor:").grid(row=5, column=3)
 peso_litragem_motor_entry = tk.Entry(root, width=6)
-peso_litragem_motor_entry.grid(row=6, column=4)
+peso_litragem_motor_entry.grid(row=5, column=4)
 
-tk.Label(root, text="Peso Carroceria:").grid(row=7, column=3)
+tk.Label(root, text="Peso Carroceria:").grid(row=6, column=3)
 peso_carroceria_entry = tk.Entry(root, width=6)
-peso_carroceria_entry.grid(row=7, column=4)
+peso_carroceria_entry.grid(row=6, column=4)
 
-tk.Label(root, text="Peso Garantia:").grid(row=8, column=3)
-peso_seguro_entry = tk.Entry(root, width=6)
-peso_seguro_entry.grid(row=8, column=4)
-
-tk.Label(root, text="Peso Tração:").grid(row=9, column=3)
+tk.Label(root, text="Peso Tração:").grid(row=7, column=3)
 peso_tracao_entry = tk.Entry(root, width=6)
-peso_tracao_entry.grid(row=9, column=4)
+peso_tracao_entry.grid(row=7, column=4)
 
-tk.Label(root, text="Peso Preço:").grid(row=10, column=3)
-peso_preco_entry = tk.Entry(root, width=6)
-peso_preco_entry.grid(row=10, column=4)
+# tk.Label(root, text="Peso Garantia:").grid(row=8, column=3)
+# peso_seguro_entry = tk.Entry(root, width=6)
+# peso_seguro_entry.grid(row=8, column=4)
 
-tk.Label(root, text="Peso Troca:").grid(row=11, column=3)
-peso_troca_entry = tk.Entry(root, width=6)
-peso_troca_entry.grid(row=11, column=4)
+# tk.Label(root, text="Peso Troca:").grid(row=11, column=3)
+# peso_troca_entry = tk.Entry(root, width=6)
+# peso_troca_entry.grid(row=11, column=4)
 
 peso_preco_entry.insert(0, "0.4")
 peso_km_entry.insert(0, "0.3")
@@ -274,12 +284,13 @@ peso_ano_entry.insert(0, "0.2")
 peso_marca_entry.insert(0, "0.02")
 peso_modelo_entry.insert(0, "0.02")
 peso_cambio_entry.insert(0, "0.01")
+peso_cor_entry.insert(0, "0.01")
 peso_combustivel_entry.insert(0, "0.01")
 peso_litragem_motor_entry.insert(0, "0.01")
 peso_carroceria_entry.insert(0, "0.01")
-peso_seguro_entry.insert(0, "0.01")
 peso_tracao_entry.insert(0, "0.01")
-peso_troca_entry.insert(0, "0.01")
+# peso_seguro_entry.insert(0, "0.01")
+# peso_troca_entry.insert(0, "0.01")
 
 # Botões
 tk.Button(root, text="Buscar", command=buscar_carros).grid(row=13, column=0, columnspan=2, pady=10)
