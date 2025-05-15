@@ -5,7 +5,7 @@ import os
 CAMINHO_CASOS = "casos_salvos.xlsx"
 
 # Atributos numéricos e categóricos usados para comparação
-ATRIBUTOS_NUMERICOS = ["price_usd", "year_produced", "odometer_value", "engine_capacity"]
+ATRIBUTOS_NUMERICOS = ["price_usd", "year_produced", "odometer_value"]
 ATRIBUTOS_CATEGORICOS = ["manufacturer_name", "model_name", "engine_fuel", "transmission", "color", "drivetrain", "body_type"]
 
 
